@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+from django.templatetags.static import static
 import uuid
 
 
@@ -92,6 +93,15 @@ class Restaurant(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def image_display_url(self):
+        if not self.image:
+            return ""
+        # Heroku本番ではmediaの永続配信を使わず、staticへコピーした同名パスを参照する。
+        if settings.DEBUG:
+            return self.image.url
+        return static(self.image.name)
 
 
 class Reservation(models.Model):

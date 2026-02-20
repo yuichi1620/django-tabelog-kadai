@@ -9,7 +9,7 @@
 
   <div class="card border-0 shadow-sm mb-4">
     {% if restaurant.image %}
-      <img src="{{ restaurant.image.url }}" class="card-img-top" alt="{{ restaurant.name }}" style="height: 320px; object-fit: cover;">
+      <img src="{{ restaurant.image_display_url }}" class="card-img-top" alt="{{ restaurant.name }}" style="height: 320px; object-fit: cover;">
     {% else %}
       <div class="card-img-top d-flex align-items-center justify-content-center bg-light text-secondary" style="height: 320px;">No Image</div>
     {% endif %}
