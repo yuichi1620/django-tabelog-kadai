@@ -1,0 +1,14 @@
+{% extends "restaurants/base.html" %}
+{% block title %}利用規約 | NAGOYAMESHI{% endblock %}
+{% block content %}
+<div class="card border-0 shadow-sm">
+  <div class="card-body">
+    <h2 class="h4">利用規約</h2>
+    {% if setting and setting.terms_of_service %}
+      <div>{{ setting.terms_of_service|linebreaksbr }}</div>
+    {% else %}
+      <div class="text-secondary">利用規約は現在準備中です。</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "restaurants/base.html" %}
+{% block title %}予約一覧 | NAGOYAMESHI{% endblock %}
+{% block content %}
+<div class="card border-0 shadow-sm">
+  <div class="card-body">
+    <h2 class="h4 mb-3">予約一覧</h2>
+    {% if reservations %}
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead><tr><th>店舗</th><th>日時</th><th>人数</th><th>状態</th><th></th></tr></thead>
+          <tbody>
+            {% for r in reservations %}
+            <tr>
+              <td><a href="{% url 'restaurants:detail' r.restaurant.id %}">{{ r.restaurant.name }}</a></td>
+              <td>{{ r.reserved_at }}</td>
+              <td>{{ r.people_count }}名</td>
+              <td>{{ r.get_status_display }}</td>
+              <td>
+                {% if r.status == 'active' %}
+                <form method="post" action="{% url 'restaurants:reservation_cancel' r.id %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-outline-danger btn-sm">キャンセル</button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="text-secondary">予約はありません。</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

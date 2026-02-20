@@ -1,0 +1,43 @@
+{% extends "restaurants/base.html" %}
+
+{% block title %}お気に入り | NAGOYAMESHI{% endblock %}
+
+{% block content %}
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+    <h2 class="h3 mb-0">お気に入り</h2>
+    <a href="{% url 'restaurants:list' %}" class="btn btn-outline-secondary btn-sm">一覧へ戻る</a>
+  </div>
+
+  {% if restaurants %}
+    <div class="row g-3">
+      {% for r in restaurants %}
+        <div class="col-12 col-md-6">
+          <div class="card h-100 border-0 shadow-sm">
+            {% if r.image %}
+              <img src="{{ r.image.url }}" class="card-img-top" alt="{{ r.name }}" style="height: 200px; object-fit: cover;">
+            {% else %}
+              <div class="card-img-top d-flex align-items-center justify-content-center bg-light text-secondary" style="height: 200px;">No Image</div>
+            {% endif %}
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h3 class="h5 mb-0">
+                  <a class="stretched-link text-decoration-none text-dark" href="{% url 'restaurants:detail' r.id %}">
+                    {{ r.name }}
+                  </a>
+                </h3>
+                <span class="badge text-bg-light border">{{ r.category.name }}</span>
+              </div>
+              <p class="text-secondary mb-2">{{ r.address }}</p>
+              <p class="mb-3">予算: <strong>{{ r.budget_min }}〜{{ r.budget_max }}円</strong></p>
+              <a class="btn btn-outline-dark btn-sm" href="{% url 'restaurants:detail' r.id %}">詳細を見る</a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-light border">
+      お気に入りはまだありません。<a class="alert-link" href="{% url 'restaurants:list' %}">お店一覧へ</a>
+    </div>
+  {% endif %}
+{% endblock %}

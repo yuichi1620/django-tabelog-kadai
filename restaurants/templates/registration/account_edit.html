@@ -1,0 +1,30 @@
+{% extends "restaurants/base.html" %}
+{% block title %}アカウント情報編集 | NAGOYAMESHI{% endblock %}
+{% block content %}
+<div class="card border-0 shadow-sm">
+  <div class="card-body">
+    <h2 class="h4 mb-3">アカウント情報編集</h2>
+    <form method="post" class="row g-3">
+      {% csrf_token %}
+      <div class="col-md-6">
+        <label class="form-label">氏名</label>
+        <input type="text" name="full_name" class="form-control" value="{{ form.full_name.value|default:'' }}" required>
+        {% if form.full_name.errors %}<div class="text-danger small">{{ form.full_name.errors }}</div>{% endif %}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">メールアドレス</label>
+        <input type="email" name="email" class="form-control" value="{{ form.email.value|default:'' }}" required>
+        {% if form.email.errors %}<div class="text-danger small">{{ form.email.errors }}</div>{% endif %}
+      </div>
+      <div class="col-12">
+        <button class="btn btn-dark" type="submit">更新する</button>
+      </div>
+    </form>
+    <hr>
+    <div>
+      <a class="btn btn-outline-dark btn-sm" href="{% url 'password_change' %}">パスワードを変更する</a>
+      <a class="btn btn-outline-secondary btn-sm" href="{% url 'password_reset' %}">パスワード再設定メールを送る</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

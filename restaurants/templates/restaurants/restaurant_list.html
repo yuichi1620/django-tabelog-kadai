@@ -1,0 +1,255 @@
+{% extends "restaurants/base.html" %}
+
+{% block title %}店舗一覧 | NAGOYAMESHI{% endblock %}
+
+{% block content %}
+
+<section class="reveal mb-4">
+  <div class="card border-0 shadow-sm overflow-hidden" style="background: radial-gradient(circle at 15% 20%, #fff7ed 0%, #ffedd5 35%, #fed7aa 100%);">
+    <div class="card-body p-4 p-lg-5 position-relative">
+      <div class="position-absolute top-0 end-0" style="width: 180px; height: 180px; background: rgba(255,255,255,0.35); border-radius: 999px; transform: translate(35%, -35%);"></div>
+      <div class="position-absolute bottom-0 start-0" style="width: 140px; height: 140px; background: rgba(255,255,255,0.28); border-radius: 999px; transform: translate(-35%, 35%);"></div>
+
+      <div class="position-relative">
+        <p class="text-uppercase small fw-semibold mb-2" style="letter-spacing: .12em;">NAGOYAMESHI GUIDE</p>
+        <h1 class="display-6 fw-bold mb-2">名古屋グルメを、ひと目で、すぐ予約。</h1>
+        <p class="mb-3 text-secondary">評価ランキング、新規掲載、クーポンをまとめてチェックして、今日行くお店を最短で見つけましょう。</p>
+
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <a href="{% url 'restaurants:list' %}?sort=rating" class="btn btn-dark btn-sm rounded-pill px-3">評価ランキングを見る</a>
+          <a href="{% url 'restaurants:list' %}?sort=new" class="btn btn-outline-dark btn-sm rounded-pill px-3">新規掲載店を見る</a>
+          <a href="{% url 'restaurants:list' %}#coupon-section" class="btn btn-outline-dark btn-sm rounded-pill px-3">クーポン対象店を見る</a>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+          <span class="badge rounded-pill text-bg-light border px-3 py-2">掲載店舗 {{ page_obj.paginator.count }}件</span>
+          <span class="badge rounded-pill text-bg-light border px-3 py-2">カテゴリ {{ categories|length }}種</span>
+          <span class="badge rounded-pill text-bg-light border px-3 py-2">クーポン対象 {{ coupon_restaurants|length }}件</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="reveal mb-4">
+  <div class="row g-3">
+    <div class="col-12 col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h2 class="h6 mb-0">評価の高いお店ランキング</h2>
+            <span class="small text-secondary">TOP5</span>
+          </div>
+          {% if top_rated_restaurants %}
+            <div class="d-flex flex-column gap-2">
+              {% for r in top_rated_restaurants %}
+              <a href="{% url 'restaurants:detail' r.id %}" class="text-decoration-none text-dark">
+                <div class="d-flex align-items-stretch gap-2 border rounded p-2 bg-white">
+                  <span class="badge text-bg-warning text-dark rounded-pill" style="min-width: 2.3rem;">{{ forloop.counter }}位</span>
+                  {% if r.image %}
+                  <img src="{{ r.image.url }}" alt="{{ r.name }}" class="rounded" style="width: 108px; height: 88px; object-fit: cover; flex-shrink: 0;">
+                  {% else %}
+                  <div class="rounded d-flex align-items-center justify-content-center bg-light text-secondary" style="width: 108px; height: 88px; flex-shrink: 0;">No</div>
+                  {% endif %}
+                  <div class="flex-grow-1">
+                    <div class="fw-semibold text-truncate">{{ r.name }}</div>
+                    <div class="small text-secondary">{{ r.category.name }}</div>
+                  </div>
+                  <div class="text-end">
+                    <div class="small fw-semibold text-warning">★{{ r.avg_rating|floatformat:1 }}</div>
+                    <div class="small text-secondary">{{ r.review_count }}件</div>
+                  </div>
+                </div>
+              </a>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-secondary small">ランキング対象のレビューがまだありません。</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h2 class="h6 mb-0">新規掲載店</h2>
+            <span class="small text-secondary">最新8件</span>
+          </div>
+          {% if new_arrival_restaurants %}
+            <div class="row g-2">
+              {% for r in new_arrival_restaurants %}
+              <div class="col-12 col-md-6">
+                <a href="{% url 'restaurants:detail' r.id %}" class="text-decoration-none text-dark">
+                  <div class="border rounded overflow-hidden bg-white h-100">
+                    {% if r.image %}
+                    <img src="{{ r.image.url }}" alt="{{ r.name }}" style="height: 92px; width: 100%; object-fit: cover;">
+                    {% else %}
+                    <div class="d-flex align-items-center justify-content-center bg-light text-secondary" style="height: 92px;">No Image</div>
+                    {% endif %}
+                    <div class="p-2">
+                      <div class="fw-semibold small text-truncate">{{ r.name }}</div>
+                      <div class="small text-secondary">{{ r.category.name }}</div>
+                    </div>
+                  </div>
+                </a>
+              </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-secondary small">掲載店舗がまだありません。</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="coupon-section" class="coupon-highlight-section reveal mb-4">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <h2 class="h5 mb-0">クーポンでお得なお店</h2>
+    <span class="text-secondary small">有効なクーポンがある店舗</span>
+  </div>
+  {% if coupon_restaurants %}
+    <div class="d-flex flex-nowrap gap-3 overflow-auto pb-2 stagger coupon-carousel" data-auto-scroll="coupon" data-scroll-speed="0.5">
+      {% for c in coupon_restaurants %}
+        <a href="{% url 'restaurants:detail' c.id %}" class="card border-0 shadow-sm text-decoration-none text-dark" style="min-width: 240px; max-width: 240px;">
+          {% if c.image %}
+            <img src="{{ c.image.url }}" class="card-img-top" alt="{{ c.name }}" style="height: 140px; object-fit: cover;">
+          {% else %}
+            <div class="card-img-top d-flex align-items-center justify-content-center bg-light text-secondary" style="height: 140px;">No Image</div>
+          {% endif %}
+          <div class="card-body py-2">
+            <div class="fw-semibold text-truncate">{{ c.name }}</div>
+            <div class="small text-secondary">{{ c.category.name }}</div>
+            <div class="small text-danger mt-1">クーポン {{ c.active_coupon_count }}件</div>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-light border mb-0">現在利用可能なクーポン対象店舗はありません。</div>
+  {% endif %}
+</section>
+
+<div class="restaurant-list-filter-wrap reveal">
+    <form method="get" class="restaurant-list-filter-form card card-body border-0 shadow-sm mb-4">
+    <div class="mb-3">
+      <label class="form-label">検索（店舗名/住所/カテゴリ）</label>
+      <input class="form-control" type="text" name="q" value="{{ q }}" placeholder="例：味噌カツ / 名駅 / ひつまぶし">
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">カテゴリ</label>
+        <select class="form-select" name="category">
+          <option value="">すべて</option>
+          {% for c in categories %}
+            <option value="{{ c.id }}" {% if category_id|add:"" == c.id|add:"" %}selected{% endif %}>
+              {{ c.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">予算（上限）</label>
+        <select class="form-select" name="budget">
+          <option value="">指定なし</option>
+          <option value="1000" {% if budget == "1000" %}selected{% endif %}>〜1000円</option>
+          <option value="3000" {% if budget == "3000" %}selected{% endif %}>〜3000円</option>
+          <option value="5000" {% if budget == "5000" %}selected{% endif %}>〜5000円</option>
+          <option value="10000" {% if budget == "10000" %}selected{% endif %}>〜10000円</option>
+        </select>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">並び替え</label>
+        <select class="form-select" name="sort">
+          <option value="new" {% if sort == "new" %}selected{% endif %}>新着順</option>
+          <option value="rating" {% if sort == "rating" %}selected{% endif %}>評価順</option>
+          <option value="popular" {% if sort == "popular" %}selected{% endif %}>人気順</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="mt-3 d-flex gap-2">
+      <button type="submit" class="btn btn-dark">検索する</button>
+      <a href="{% url 'restaurants:list' %}" class="btn btn-outline-secondary">リセット</a>
+    </div>
+  </form>
+</div>
+
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 reveal">
+    <h2 class="h3 mb-0">店舗一覧</h2>
+    <span class="badge text-bg-dark rounded-pill px-3 py-2">{{ page_obj.paginator.count }}件</span>
+  </div>
+
+
+
+  {% if restaurants %}
+    <div class="row g-3 stagger">
+      {% for r in restaurants %}
+        <div class="col-12 col-md-6">
+          <div class="card h-100 border-0 shadow-sm">
+            {% if r.image %}
+              <img src="{{ r.image.url }}" class="card-img-top" alt="{{ r.name }}" style="height: 200px; object-fit: cover;">
+            {% else %}
+              <div class="card-img-top d-flex align-items-center justify-content-center bg-light text-secondary" style="height: 200px;">No Image</div>
+            {% endif %}
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h3 class="h5 card-title mb-0">
+                  <a class="stretched-link text-decoration-none text-dark" href="{% url 'restaurants:detail' r.id %}">{{ r.name }}</a>
+                </h3>
+                <span class="badge text-bg-light border">{{ r.category.name }}</span>
+              </div>
+              <p class="text-secondary mb-2">{{ r.address }}</p>
+              <p class="small text-secondary mb-2">
+                <span class="me-2">🕒 {{ r.business_hours|default:"未設定" }}</span>
+                <span>📞 {{ r.phone_number|default:"未設定" }}</span>
+              </p>
+              <p class="mb-2">予算: <strong>{{ r.budget_min }}〜{{ r.budget_max }}円</strong></p>
+              <div class="fw-semibold">
+                {% if r.avg_rating %}
+                  <span class="text-warning">★</span>{{ r.avg_rating|floatformat:1 }} ({{ r.review_count }}件)
+                {% else %}
+                  <span class="text-secondary">まだレビューなし</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+      <nav class="mt-4" aria-label="ページネーション">
+        <ul class="pagination justify-content-center mb-0">
+        {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?q={{ q }}&category={{ category_id }}&budget={{ budget }}&sort={{ sort }}&page={{ page_obj.previous_page_number }}">前へ</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">前へ</span></li>
+        {% endif %}
+
+        <li class="page-item disabled">
+          <span class="page-link">ページ {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        </li>
+
+        {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?q={{ q }}&category={{ category_id }}&budget={{ budget }}&sort={{ sort }}&page={{ page_obj.next_page_number }}">次へ</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">次へ</span></li>
+        {% endif %}
+        </ul>
+      </nav>
+    {% endif %}
+
+  {% else %}
+    <div class="alert alert-light border">条件に合う店舗がありません。</div>
+  {% endif %}
+{% endblock %}

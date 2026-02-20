@@ -1,0 +1,59 @@
+{% extends "restaurants/base.html" %}
+{% block title %}店舗詳細（管理） | NAGOYAMESHI{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="h4 mb-0">店舗詳細（管理）</h2>
+  <a class="btn btn-outline-dark btn-sm" href="{% url 'restaurants:admin_restaurant_list' %}">店舗一覧へ</a>
+</div>
+
+<div class="card border-0 shadow-sm mb-3">
+  <div class="card-body">
+    <p class="mb-1"><strong>店舗名:</strong> {{ restaurant.name }}</p>
+    <p class="mb-1"><strong>カテゴリ:</strong> {{ restaurant.category.name }}</p>
+    <p class="mb-1"><strong>住所:</strong> {{ restaurant.address }}</p>
+    <p class="mb-1"><strong>予算:</strong> {{ restaurant.budget_min }}〜{{ restaurant.budget_max }}円</p>
+    <p class="mb-0"><strong>説明:</strong> {{ restaurant.description|default:"-" }}</p>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body">
+    <h3 class="h6 mb-3">レビュー一覧</h3>
+    {% if reviews %}
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>ID</th>
+              <th>ユーザー</th>
+              <th>評価</th>
+              <th>コメント</th>
+              <th>投稿日</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for rv in reviews %}
+            <tr>
+              <td>{{ rv.id }}</td>
+              <td>{{ rv.user.email|default:rv.user.username }}</td>
+              <td>★{{ rv.rating }}</td>
+              <td>{{ rv.comment|default:"-" }}</td>
+              <td>{{ rv.created_at }}</td>
+              <td>
+                <form method="post" action="{% url 'restaurants:admin_review_delete' rv.id %}" onsubmit="return confirm('このレビューを削除しますか？');">
+                  {% csrf_token %}
+                  <button class="btn btn-outline-danger btn-sm" type="submit">削除</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="text-secondary">レビューはありません。</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

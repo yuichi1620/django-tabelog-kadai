@@ -1,0 +1,11 @@
+{% extends "restaurants/base.html" %}
+{% block title %}決済完了 | NAGOYAMESHI{% endblock %}
+{% block content %}
+<div class="card border-0 shadow-sm">
+  <div class="card-body">
+    <h2 class="h4">決済が完了しました</h2>
+    <p>会員ステータスの反映には数秒かかる場合があります。反映されない場合はページを再読み込みしてください。</p>
+    <a class="btn btn-dark" href="{% url 'restaurants:mypage' %}">マイページへ</a>
+  </div>
+</div>
+{% endblock %}

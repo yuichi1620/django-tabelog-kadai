@@ -1,0 +1,32 @@
+{% extends "restaurants/base.html" %}
+{% block title %}管理集計 | NAGOYAMESHI{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="h4 mb-0">管理集計ダッシュボード</h2>
+  <form class="d-flex gap-2" method="get">
+    <input type="month" name="ym" value="{{ ym }}" class="form-control">
+    <button class="btn btn-outline-dark" type="submit">表示</button>
+  </form>
+</div>
+<div class="row g-3">
+  <div class="col-md-4"><div class="card border-0 shadow-sm"><div class="card-body">総会員数: <strong>{{ total_members }}</strong></div></div></div>
+  <div class="col-md-4"><div class="card border-0 shadow-sm"><div class="card-body">無料会員数: <strong>{{ free_members }}</strong></div></div></div>
+  <div class="col-md-4"><div class="card border-0 shadow-sm"><div class="card-body">有料会員数: <strong>{{ paid_members }}</strong></div></div></div>
+  <div class="col-md-4"><div class="card border-0 shadow-sm"><div class="card-body">総予約数: <strong>{{ total_reservations }}</strong></div></div></div>
+  <div class="col-md-4"><div class="card border-0 shadow-sm"><div class="card-body">店舗数: <strong>{{ total_restaurants }}</strong></div></div></div>
+  <div class="col-md-4"><div class="card border-0 shadow-sm"><div class="card-body">月間売上(簡易): <strong>{{ monthly_sales }}円</strong></div></div></div>
+</div>
+
+<div class="card border-0 shadow-sm mt-4">
+  <div class="card-body">
+    <h3 class="h6 mb-3">管理メニュー</h3>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-dark btn-sm" href="{% url 'restaurants:admin_member_list' %}">会員一覧・検索</a>
+      <a class="btn btn-outline-dark btn-sm" href="{% url 'restaurants:admin_restaurant_list' %}">店舗一覧・レビュー管理</a>
+      <a class="btn btn-outline-dark btn-sm" href="{% url 'restaurants:admin_category_list' %}">カテゴリ一覧</a>
+      <a class="btn btn-outline-dark btn-sm" href="/admin/restaurants/restaurant/">店舗CRUD</a>
+      <a class="btn btn-outline-dark btn-sm" href="/admin/restaurants/category/">カテゴリCRUD</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

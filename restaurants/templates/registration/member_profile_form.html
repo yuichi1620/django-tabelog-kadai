@@ -1,0 +1,71 @@
+{% extends "restaurants/base.html" %}
+
+{% block title %}会員情報 | NAGOYAMESHI{% endblock %}
+
+{% block content %}
+  <div class="row g-3">
+    <div class="col-12 col-lg-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h2 class="h4 mb-3">会員情報の登録・編集</h2>
+          <form method="post">
+            {% csrf_token %}
+
+            <div class="mb-3">
+              <label class="form-label" for="id_full_name">氏名</label>
+              {{ form.full_name }}
+              {% if form.full_name.errors %}<div class="text-danger small">{{ form.full_name.errors }}</div>{% endif %}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" for="id_phone_number">電話番号</label>
+              {{ form.phone_number }}
+              {% if form.phone_number.errors %}<div class="text-danger small">{{ form.phone_number.errors }}</div>{% endif %}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" for="id_postal_code">郵便番号</label>
+              {{ form.postal_code }}
+              {% if form.postal_code.errors %}<div class="text-danger small">{{ form.postal_code.errors }}</div>{% endif %}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" for="id_address">住所</label>
+              {{ form.address }}
+              {% if form.address.errors %}<div class="text-danger small">{{ form.address.errors }}</div>{% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-dark">保存する</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h3 class="h6">会員ステータス</h3>
+          <p class="mb-2">
+            {% if member and member.is_paid %}
+              <span class="badge text-bg-success">有料会員</span>
+            {% else %}
+              <span class="badge text-bg-secondary">無料会員</span>
+            {% endif %}
+          </p>
+          <div class="d-grid gap-2">
+            <a class="btn btn-outline-dark btn-sm" href="{% url 'restaurants:member_account_edit' %}">アカウント情報編集</a>
+            <a class="btn btn-outline-dark btn-sm" href="{% url 'password_change' %}">パスワード変更</a>
+            <a class="btn btn-outline-dark btn-sm" href="{% url 'restaurants:payment_method_edit' %}">カード情報</a>
+            {% if member and member.is_paid %}
+            <form method="post" action="{% url 'restaurants:cancel_membership' %}">
+              {% csrf_token %}
+              <button class="btn btn-outline-danger btn-sm w-100" type="submit">有料会員を解約</button>
+            </form>
+            {% else %}
+            <a class="btn btn-dark btn-sm" href="{% url 'restaurants:upgrade_membership' %}">有料会員にアップグレード</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "restaurants/base.html" %}
+{% block title %}マイページ | NAGOYAMESHI{% endblock %}
+{% block content %}
+<div class="card border-0 shadow-sm mb-3">
+  <div class="card-body p-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+      <div>
+        <h2 class="h4 mb-2">会員情報</h2>
+        <p class="mb-1">氏名: <strong>{{ member.full_name|default:user.first_name }}</strong></p>
+        <p class="mb-2">メール: <strong>{{ user.email }}</strong></p>
+        {% if member.is_paid %}
+          <span class="badge text-bg-success">有料会員</span>
+        {% else %}
+          <span class="badge text-bg-secondary">無料会員</span>
+        {% endif %}
+      </div>
+      <div class="d-grid gap-2" style="min-width: 220px;">
+        <a class="btn btn-outline-dark btn-sm" href="{% url 'restaurants:member_profile_edit' %}">会員情報編集</a>
+        <a class="btn btn-outline-dark btn-sm" href="{% url 'restaurants:member_account_edit' %}">アカウント編集</a>
+        {% if not member.is_paid %}
+        <a class="btn btn-dark btn-sm" href="{% url 'restaurants:upgrade_membership' %}">有料会員にアップグレード</a>
+        {% endif %}
+        <form method="post" action="{% url 'restaurants:withdraw' %}" onsubmit="return confirm('退会しますか？');">
+          {% csrf_token %}
+          <button class="btn btn-outline-danger btn-sm w-100" type="submit">退会する</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-lg-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h3 class="h6">最新の予約</h3>
+        {% if reservations %}
+        <ul class="mb-0">
+          {% for r in reservations %}
+          <li>{{ r.restaurant.name }} / {{ r.reserved_at }} / {{ r.people_count }}名 / {{ r.get_status_display }}</li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="text-secondary">予約はありません。</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h3 class="h6">最新のお気に入り</h3>
+        {% if favorites %}
+        <ul class="mb-0">
+          {% for f in favorites %}
+          <li><a href="{% url 'restaurants:detail' f.restaurant.id %}">{{ f.restaurant.name }}</a></li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="text-secondary">お気に入りはありません。</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

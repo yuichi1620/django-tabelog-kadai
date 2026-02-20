@@ -1,0 +1,71 @@
+{% extends "restaurants/base.html" %}
+{% block title %}会員詳細 | NAGOYAMESHI{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="h4 mb-0">会員詳細</h2>
+  <a class="btn btn-outline-dark btn-sm" href="{% url 'restaurants:admin_member_list' %}">会員一覧へ</a>
+</div>
+
+<div class="card border-0 shadow-sm mb-3">
+  <div class="card-body">
+    <p class="mb-1"><strong>氏名:</strong> {{ member.full_name|default:member.user.first_name }}</p>
+    <p class="mb-1"><strong>メール:</strong> {{ member.user.email }}</p>
+    <p class="mb-1"><strong>電話番号:</strong> {{ member.phone_number|default:"-" }}</p>
+    <p class="mb-1"><strong>郵便番号:</strong> {{ member.postal_code|default:"-" }}</p>
+    <p class="mb-1"><strong>住所:</strong> {{ member.address|default:"-" }}</p>
+    <p class="mb-0">
+      <strong>会員区分:</strong>
+      {% if member.plan_status == "paid" %}
+      <span class="badge text-bg-success">有料</span>
+      {% else %}
+      <span class="badge text-bg-secondary">無料</span>
+      {% endif %}
+    </p>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h3 class="h6">予約履歴</h3>
+        <ul class="small mb-0">
+          {% for r in reservations %}
+          <li>{{ r.restaurant.name }} / {{ r.reserved_at }} / {{ r.get_status_display }}</li>
+          {% empty %}
+          <li class="text-secondary">予約なし</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h3 class="h6">お気に入り</h3>
+        <ul class="small mb-0">
+          {% for f in favorites %}
+          <li>{{ f.restaurant.name }}</li>
+          {% empty %}
+          <li class="text-secondary">お気に入りなし</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h3 class="h6">レビュー</h3>
+        <ul class="small mb-0">
+          {% for rv in reviews %}
+          <li>{{ rv.restaurant.name }} / ★{{ rv.rating }}</li>
+          {% empty %}
+          <li class="text-secondary">レビューなし</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

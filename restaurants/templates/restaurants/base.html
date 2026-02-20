@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}NAGOYAMESHI{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+  <style>
+    body { background: linear-gradient(180deg, #f8fafc 0%, #f3f4f6 100%); min-height: 100vh; }
+    .brand { font-weight: 800; letter-spacing: 0.02em; }
+    .navbar { backdrop-filter: blur(8px); }
+    .card { transition: transform 0.28s ease, box-shadow 0.28s ease; }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 1rem 2rem rgba(15, 23, 42, 0.14) !important; }
+    .reveal {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .reveal.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .stagger > * {
+      opacity: 0;
+      transform: translateY(12px);
+      animation: cardIn 0.45s ease forwards;
+    }
+    .stagger > *:nth-child(1) { animation-delay: 0.03s; }
+    .stagger > *:nth-child(2) { animation-delay: 0.08s; }
+    .stagger > *:nth-child(3) { animation-delay: 0.13s; }
+    .stagger > *:nth-child(4) { animation-delay: 0.18s; }
+    .stagger > *:nth-child(5) { animation-delay: 0.23s; }
+    .stagger > *:nth-child(6) { animation-delay: 0.28s; }
+    @keyframes cardIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .card, .reveal, .stagger > * {
+        transition: none !important;
+        animation: none !important;
+        transform: none !important;
+        opacity: 1 !important;
+      }
+    }
+    .coupon-carousel::-webkit-scrollbar { height: 8px; }
+    .coupon-carousel::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+  </style>
+</head>
+
+<body>
+  <header class="sticky-top">
+    <nav class="navbar navbar-expand-lg bg-white border-bottom shadow-sm">
+      <div class="container">
+        <a class="navbar-brand brand" href="{% url 'restaurants:list' %}">NAGOYAMESHI</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="mainNavbar">
+          <form class="d-flex me-auto my-2 my-lg-0" method="get" action="{% url 'restaurants:list' %}" role="search">
+            <input class="form-control me-2" type="text" name="q" value="{{ request.GET.q }}" placeholder="店名・住所・カテゴリで検索">
+            <button class="btn btn-outline-dark" type="submit">検索</button>
+          </form>
+
+          <div class="d-flex align-items-center gap-2">
+            {% if user.is_authenticated %}
+            <a class="btn btn-outline-secondary btn-sm" href="{% url 'restaurants:mypage' %}">マイページ</a>
+            <a class="btn btn-outline-secondary btn-sm" href="{% url 'restaurants:reservation_list' %}">予約一覧</a>
+            <a class="btn btn-outline-secondary btn-sm" href="{% url 'restaurants:favorite_list' %}">お気に入り</a>
+            {% if user.is_staff %}
+            <a class="btn btn-outline-secondary btn-sm" href="{% url 'restaurants:admin_dashboard' %}">管理集計</a>
+            {% endif %}
+            <form method="post" action="{% url 'logout' %}" class="m-0">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-dark btn-sm">ログアウト</button>
+            </form>
+            {% else %}
+            <a class="btn btn-outline-dark btn-sm" href="{% url 'login' %}">ログイン</a>
+            <a class="btn btn-dark btn-sm" href="{% url 'restaurants:signup' %}">新規登録</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  {% if messages %}
+  <div class="container mt-3">
+    {% for message in messages %}
+    <div class="alert alert-info mb-2" role="alert">
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <main class="container py-4">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="border-top bg-white py-3">
+    <div class="container text-center text-muted">
+      <small>© NAGOYAMESHI</small>
+      <span class="mx-2">|</span>
+      <a class="text-muted" href="{% url 'restaurants:terms' %}">利用規約</a>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const targets = document.querySelectorAll(".reveal");
+      if (!("IntersectionObserver" in window) || targets.length === 0) {
+        targets.forEach((el) => el.classList.add("is-visible"));
+        return;
+      }
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12 });
+      targets.forEach((el) => observer.observe(el));
+
+      const carousels = document.querySelectorAll('[data-auto-scroll="coupon"]');
+      carousels.forEach((carousel) => {
+        const speed = Number(carousel.dataset.scrollSpeed || 0.45);
+        let rafId = null;
+        let paused = false;
+
+        const step = () => {
+          if (!paused) {
+            const max = carousel.scrollWidth - carousel.clientWidth;
+            if (max > 0) {
+              carousel.scrollLeft += speed;
+              if (carousel.scrollLeft >= max) {
+                carousel.scrollLeft = 0;
+              }
+            }
+          }
+          rafId = requestAnimationFrame(step);
+        };
+
+        carousel.addEventListener("mouseenter", () => { paused = true; });
+        carousel.addEventListener("mouseleave", () => { paused = false; });
+        carousel.addEventListener("touchstart", () => { paused = true; }, { passive: true });
+        carousel.addEventListener("touchend", () => { paused = false; }, { passive: true });
+
+        if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          rafId = requestAnimationFrame(step);
+        }
+
+        window.addEventListener("beforeunload", () => {
+          if (rafId) cancelAnimationFrame(rafId);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

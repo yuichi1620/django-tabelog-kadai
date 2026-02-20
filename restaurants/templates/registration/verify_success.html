@@ -1,0 +1,17 @@
+{% extends "restaurants/base.html" %}
+{% block title %}認証完了 | NAGOYAMESHI{% endblock %}
+{% block content %}
+<div class="card border-0 shadow-sm">
+  <div class="card-body">
+    {% if email_change %}
+      <h2 class="h4">メールアドレス変更が完了しました</h2>
+      <p>新しいメールアドレスで引き続きご利用いただけます。</p>
+      <a href="{% url 'restaurants:member_account_edit' %}" class="btn btn-dark">アカウント情報へ戻る</a>
+    {% else %}
+      <h2 class="h4">メール認証が完了しました</h2>
+      <p>会員登録ありがとうございます。引き続き会員情報を入力してください。</p>
+      <a href="{% url 'restaurants:member_profile_edit' %}" class="btn btn-dark">会員情報を入力</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

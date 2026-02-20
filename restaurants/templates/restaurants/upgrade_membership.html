@@ -1,0 +1,27 @@
+{% extends "restaurants/base.html" %}
+{% block title %}有料会員アップグレード | NAGOYAMESHI{% endblock %}
+{% block content %}
+<div class="card border-0 shadow-sm">
+  <div class="card-body">
+    <h2 class="h4">有料会員アップグレード</h2>
+    <p>月額 {{ monthly_fee }} 円で、予約・レビュー・お気に入り・クーポンが利用できます。</p>
+
+    {% if member.is_paid %}
+      <div class="alert alert-success">現在、有料会員です。</div>
+      <form method="post" action="{% url 'restaurants:create_billing_portal_session' %}">
+        {% csrf_token %}
+        <button class="btn btn-outline-dark" type="submit">カード情報/請求情報を管理する</button>
+      </form>
+    {% else %}
+      {% if stripe_ready %}
+      <form method="post" action="{% url 'restaurants:create_checkout_session' %}" class="mt-3">
+        {% csrf_token %}
+        <button class="btn btn-dark" type="submit">Stripeで有料会員登録する</button>
+      </form>
+      {% else %}
+      <div class="alert alert-warning">Stripe設定が未完了です。運営者に連絡してください。</div>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
