@@ -404,7 +404,14 @@ def restaurant_detail(request, pk):
     )
 
     reviews = restaurant.reviews.filter(is_public=True).order_by("-created_at")
-    avg_rating = reviews.aggregate(avg=Avg("rating"))["avg"]
+    rating_summary = reviews.aggregate(
+        avg_rating=Avg("rating"),
+        avg_atmosphere=Avg("rating_atmosphere"),
+        avg_taste=Avg("rating_taste"),
+        avg_price=Avg("rating_price"),
+        avg_service=Avg("rating_service"),
+    )
+    avg_rating = rating_summary["avg_rating"]
 
     is_favorite = False
     my_review = None
@@ -427,6 +434,7 @@ def restaurant_detail(request, pk):
         "restaurant": restaurant,
         "reviews": reviews,
         "avg_rating": avg_rating,
+        "rating_summary": rating_summary,
         "is_favorite": is_favorite,
         "my_review": my_review,
         "member": member,

@@ -32,6 +32,11 @@
           <span class="text-secondary">まだレビューなし</span>
         {% endif %}
       </div>
+      {% if avg_rating %}
+        <div class="small text-secondary mt-1">
+          雰囲気 {{ rating_summary.avg_atmosphere|floatformat:1 }} / 味 {{ rating_summary.avg_taste|floatformat:1 }} / 値段 {{ rating_summary.avg_price|floatformat:1 }} / 接客 {{ rating_summary.avg_service|floatformat:1 }}
+        </div>
+      {% endif %}
 
       <div class="mt-3">
         {% if user.is_authenticated and member and member.is_paid %}
