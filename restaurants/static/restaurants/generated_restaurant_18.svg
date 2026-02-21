@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#22c55e"/>
+      <stop offset="100%" stop-color="#16a34a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#g)"/>
+  <circle cx="980" cy="140" r="180" fill="rgba(255,255,255,0.14)"/>
+  <circle cx="180" cy="700" r="220" fill="rgba(255,255,255,0.10)"/>
+  <text x="80" y="360" fill="white" font-size="66" font-family="Hiragino Sans, Noto Sans JP, sans-serif" font-weight="700">金山クラフトバーガー</text>
+  <text x="80" y="430" fill="white" font-size="30" font-family="Hiragino Sans, Noto Sans JP, sans-serif" opacity="0.92">NAGOYAMESHI</text>
+  <text x="80" y="485" fill="white" font-size="26" font-family="Hiragino Sans, Noto Sans JP, sans-serif" opacity="0.92">愛知県名古屋市中区金山2-8-4</text>
+</svg>

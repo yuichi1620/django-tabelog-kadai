@@ -98,11 +98,11 @@ class Restaurant(models.Model):
     def image_display_url(self):
         if not self.image:
             return ""
-        try:
+        # mediaの実ファイルが存在する場合のみmedia URLを返す。
+        if self.image.storage.exists(self.image.name):
             return self.image.url
-        except Exception:
-            # media配信できない環境では、同名パスをstatic側に配置してフォールバックする。
-            return static(self.image.name)
+        # media配信できない環境では、同名パスをstatic側に配置してフォールバックする。
+        return static(self.image.name)
 
 
 class Reservation(models.Model):
