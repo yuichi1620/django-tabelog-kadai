@@ -43,15 +43,17 @@ urlpatterns = [
     # 基本情報
     path("terms/", views.terms, name="terms"),
 
-    # 管理者
-    path("admin-dashboard/", views.admin_dashboard, name="admin_dashboard"),
-    path("admin/members/", views.admin_member_list, name="admin_member_list"),
-    path("admin/members/<int:pk>/", views.admin_member_detail, name="admin_member_detail"),
-    path("admin/restaurants/", views.admin_restaurant_list, name="admin_restaurant_list"),
-    path("admin/restaurants/<int:pk>/", views.admin_restaurant_detail, name="admin_restaurant_detail"),
-    path("admin/reviews/<int:pk>/delete/", views.admin_review_delete, name="admin_review_delete"),
-    path("admin/reviews/", views.admin_review_list, name="admin_review_list"),
-    path("admin/reviews/<int:pk>/visibility/", views.admin_review_visibility_toggle, name="admin_review_visibility_toggle"),
-    path("admin/categories/", views.admin_category_list, name="admin_category_list"),
-    path("admin/sales/", views.admin_sales_list, name="admin_sales_list"),
+    # 管理者（Django標準adminと競合しないように /management 配下へ分離）
+    path("management/dashboard/", views.admin_dashboard, name="admin_dashboard"),
+    path("management/members/", views.admin_member_list, name="admin_member_list"),
+    path("management/members/<int:pk>/", views.admin_member_detail, name="admin_member_detail"),
+    path("management/restaurants/", views.admin_restaurant_list, name="admin_restaurant_list"),
+    path("management/restaurants/<int:pk>/", views.admin_restaurant_detail, name="admin_restaurant_detail"),
+    path("management/reviews/<int:pk>/delete/", views.admin_review_delete, name="admin_review_delete"),
+    path("management/reviews/", views.admin_review_list, name="admin_review_list"),
+    path("management/reviews/<int:pk>/visibility/", views.admin_review_visibility_toggle, name="admin_review_visibility_toggle"),
+    path("management/categories/", views.admin_category_list, name="admin_category_list"),
+    path("management/sales/", views.admin_sales_list, name="admin_sales_list"),
+    # 旧URL互換
+    path("admin-dashboard/", views.admin_dashboard),
 ]
