@@ -700,8 +700,13 @@ def billing_success(request):
 def create_billing_portal_session(request):
     member, _ = Member.objects.get_or_create(user=request.user)
     if not member.stripe_customer_id:
-        messages.error(request, "Stripe顧客情報が見つかりません。")
-        return redirect("restaurants:upgrade_membership")
+        customer = stripe.Customer.create(
+            email=request.user.email,
+            name=member.full_name or request.user.first_name or request.user.email,
+            metadata={"user_id": str(request.user.id)},
+        )
+        member.stripe_customer_id = customer.id
+        member.save(update_fields=["stripe_customer_id"])
 
     session = stripe.billing_portal.Session.create(
         customer=member.stripe_customer_id,

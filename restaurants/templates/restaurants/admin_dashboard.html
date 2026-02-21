@@ -26,10 +26,10 @@
       <a class="btn btn-outline-dark btn-sm" href="{% url 'restaurants:admin_review_list' %}">レビュー一覧・検索</a>
       <a class="btn btn-outline-dark btn-sm" href="{% url 'restaurants:admin_category_list' %}">カテゴリ一覧</a>
       <a class="btn btn-outline-dark btn-sm" href="{% url 'restaurants:admin_sales_list' %}">売上一覧・合計</a>
-      <a class="btn btn-outline-dark btn-sm" href="/admin/restaurants/restaurant/">店舗CRUD</a>
-      <a class="btn btn-outline-dark btn-sm" href="/admin/restaurants/restaurant/import-csv/">店舗CSV入力</a>
-      <a class="btn btn-outline-dark btn-sm" href="/admin/restaurants/review/">レビュー管理（Django管理）</a>
-      <a class="btn btn-outline-dark btn-sm" href="/admin/restaurants/category/">カテゴリCRUD</a>
+      <a class="btn btn-outline-dark btn-sm" href="{% url 'admin:restaurants_restaurant_changelist' %}">店舗CRUD</a>
+      <a class="btn btn-outline-dark btn-sm" href="{% url 'admin:restaurants_restaurant_import_csv' %}">店舗CSV入力</a>
+      <a class="btn btn-outline-dark btn-sm" href="{% url 'admin:restaurants_review_changelist' %}">レビュー管理（Django管理）</a>
+      <a class="btn btn-outline-dark btn-sm" href="{% url 'admin:restaurants_category_changelist' %}">カテゴリCRUD</a>
     </div>
   </div>
 </div>

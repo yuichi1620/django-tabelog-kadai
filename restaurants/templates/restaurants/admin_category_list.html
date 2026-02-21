@@ -21,13 +21,13 @@
 <div class="card border-0 shadow-sm">
   <div class="card-body">
     <div class="mb-3">
-      <a class="btn btn-dark btn-sm" href="/admin/restaurants/category/add/">カテゴリを新規登録</a>
+      <a class="btn btn-dark btn-sm" href="{% url 'admin:restaurants_category_add' %}">カテゴリを新規登録</a>
     </div>
     <ul class="list-group list-group-flush">
       {% for c in categories %}
       <li class="list-group-item d-flex justify-content-between align-items-center">
         <span>{{ c.name }}</span>
-        <a class="btn btn-outline-dark btn-sm" href="/admin/restaurants/category/{{ c.id }}/change/">編集 / 削除</a>
+        <a class="btn btn-outline-dark btn-sm" href="{% url 'admin:restaurants_category_change' c.id %}">編集 / 削除</a>
       </li>
       {% empty %}
       <li class="list-group-item text-secondary">カテゴリがありません。</li>

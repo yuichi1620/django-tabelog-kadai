@@ -4,8 +4,8 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h2 class="h4 mb-0">店舗一覧（管理）</h2>
   <div class="d-flex gap-2">
-    <a class="btn btn-outline-dark btn-sm" href="/admin/restaurants/restaurant/import-csv/">CSV入力</a>
-    <a class="btn btn-outline-dark btn-sm" href="/admin/restaurants/restaurant/">CSV出力（管理画面アクション）</a>
+    <a class="btn btn-outline-dark btn-sm" href="{% url 'admin:restaurants_restaurant_import_csv' %}">CSV入力</a>
+    <a class="btn btn-outline-dark btn-sm" href="{% url 'admin:restaurants_restaurant_changelist' %}">CSV出力（管理画面アクション）</a>
     <a class="btn btn-outline-dark btn-sm" href="{% url 'restaurants:admin_dashboard' %}">管理ダッシュボードへ</a>
   </div>
 </div>
@@ -44,7 +44,7 @@
           <td>{{ r.address }}</td>
           <td>{{ r.review_count }}</td>
           <td>
-            <a class="btn btn-outline-dark btn-sm" href="/admin/restaurants/restaurant/{{ r.id }}/change/">編集</a>
+            <a class="btn btn-outline-dark btn-sm" href="{% url 'admin:restaurants_restaurant_change' r.id %}">編集</a>
           </td>
         </tr>
         {% empty %}
