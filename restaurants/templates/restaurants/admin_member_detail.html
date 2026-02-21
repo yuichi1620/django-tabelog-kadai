@@ -59,7 +59,7 @@
         <h3 class="h6">レビュー</h3>
         <ul class="small mb-0">
           {% for rv in reviews %}
-          <li>{{ rv.restaurant.name }} / ★{{ rv.rating }}</li>
+          <li>{{ rv.restaurant.name }} / ★{{ rv.rating }}（雰囲気{{ rv.rating_atmosphere }}・味{{ rv.rating_taste }}・値段{{ rv.rating_price }}・接客{{ rv.rating_service }}）</li>
           {% empty %}
           <li class="text-secondary">レビューなし</li>
           {% endfor %}

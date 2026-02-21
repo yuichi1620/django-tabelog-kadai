@@ -50,8 +50,24 @@ class RestaurantListViewTests(TestCase):
             username="reviewer@example.com", email="reviewer@example.com", password="pass12345"
         )
         Member.objects.create(user=user, full_name="Reviewer", plan_status=Member.PLAN_PAID)
-        Review.objects.create(user=user, restaurant=self.restaurant_old, rating=2, comment="old")
-        Review.objects.create(user=user, restaurant=self.restaurant_new, rating=5, comment="new")
+        Review.objects.create(
+            user=user,
+            restaurant=self.restaurant_old,
+            rating_atmosphere=2,
+            rating_taste=2,
+            rating_price=2,
+            rating_service=2,
+            comment="old",
+        )
+        Review.objects.create(
+            user=user,
+            restaurant=self.restaurant_new,
+            rating_atmosphere=5,
+            rating_taste=5,
+            rating_price=5,
+            rating_service=5,
+            comment="new",
+        )
         Favorite.objects.create(user=user, restaurant=self.restaurant_new)
 
     def test_list_sort_new_orders_by_created_at_desc(self):
@@ -116,7 +132,13 @@ class PaidRestrictionTests(TestCase):
         self.client.login(username="user1@example.com", password="pass12345")
         response = self.client.post(
             reverse("restaurants:review_create", kwargs={"pk": self.restaurant.pk}),
-            {"rating": "5", "comment": "great"},
+            {
+                "rating_atmosphere": "5",
+                "rating_taste": "5",
+                "rating_price": "5",
+                "rating_service": "5",
+                "comment": "great",
+            },
         )
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse("restaurants:upgrade_membership"), fetch_redirect_response=False)
@@ -129,7 +151,13 @@ class PaidRestrictionTests(TestCase):
         self.client.login(username="user1@example.com", password="pass12345")
         self.client.post(
             reverse("restaurants:review_create", kwargs={"pk": self.restaurant.pk}),
-            {"rating": "4", "comment": "first"},
+            {
+                "rating_atmosphere": "4",
+                "rating_taste": "4",
+                "rating_price": "4",
+                "rating_service": "4",
+                "comment": "first",
+            },
         )
         self.assertEqual(Review.objects.count(), 1)
 
@@ -185,9 +213,25 @@ class ModelConstraintTests(TestCase):
         )
 
     def test_review_unique_constraint(self):
-        Review.objects.create(user=self.user, restaurant=self.restaurant, rating=4, comment="")
+        Review.objects.create(
+            user=self.user,
+            restaurant=self.restaurant,
+            rating_atmosphere=4,
+            rating_taste=4,
+            rating_price=4,
+            rating_service=4,
+            comment="",
+        )
         with self.assertRaises(IntegrityError):
-            Review.objects.create(user=self.user, restaurant=self.restaurant, rating=5, comment="")
+            Review.objects.create(
+                user=self.user,
+                restaurant=self.restaurant,
+                rating_atmosphere=5,
+                rating_taste=5,
+                rating_price=5,
+                rating_service=5,
+                comment="",
+            )
 
     def test_favorite_unique_constraint(self):
         Favorite.objects.create(user=self.user, restaurant=self.restaurant)

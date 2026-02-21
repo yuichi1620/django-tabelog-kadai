@@ -42,6 +42,12 @@ from .models import (
 REVIEW_COMMENT_MAX_LENGTH = 500
 MONTHLY_FEE = 300
 EMAIL_CHANGE_TOKEN_MAX_AGE = getattr(settings, "EMAIL_CHANGE_TOKEN_MAX_AGE", 60 * 60 * 24)
+REVIEW_SCORE_FIELDS = (
+    ("rating_atmosphere", "お店の雰囲気"),
+    ("rating_taste", "味"),
+    ("rating_price", "値段"),
+    ("rating_service", "接客"),
+)
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -180,12 +186,14 @@ def verify_email_change(request, token):
 def review_create(request, pk):
     restaurant = get_object_or_404(Restaurant, pk=pk)
 
-    rating = request.POST.get("rating", "").strip()
     comment = request.POST.get("comment", "").strip()
-
-    if not rating.isdigit() or not (1 <= int(rating) <= 5):
-        messages.error(request, "評価は1〜5で入力してな。")
-        return redirect("restaurants:detail", pk=pk)
+    scores = {}
+    for field_name, label in REVIEW_SCORE_FIELDS:
+        value = request.POST.get(field_name, "").strip()
+        if not value.isdigit() or not (1 <= int(value) <= 5):
+            messages.error(request, f"{label}は1〜5で入力してな。")
+            return redirect("restaurants:detail", pk=pk)
+        scores[field_name] = int(value)
 
     if len(comment) > REVIEW_COMMENT_MAX_LENGTH:
         messages.error(request, f"レビュー本文は{REVIEW_COMMENT_MAX_LENGTH}文字以内で入力してな。")
@@ -194,7 +202,7 @@ def review_create(request, pk):
     review, created = Review.objects.update_or_create(
         user=request.user,
         restaurant=restaurant,
-        defaults={"rating": int(rating), "comment": comment},
+        defaults={**scores, "comment": comment},
     )
 
     messages.success(request, "レビュー投稿できたで！" if created else "レビュー更新できたで！")

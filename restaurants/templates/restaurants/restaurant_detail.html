@@ -59,15 +59,39 @@
         <form method="post" action="{% url 'restaurants:review_create' restaurant.id %}">
           {% csrf_token %}
 
-          <div class="mb-3">
-            <label class="form-label">評価（1〜5）</label>
-            <select name="rating" class="form-select">
-              {% for i in "12345" %}
-                <option value="{{ i }}" {% if my_review and my_review.rating|stringformat:"s" == i %}selected{% endif %}>
-                  {{ i }}
-                </option>
-              {% endfor %}
-            </select>
+          <div class="row g-2">
+            <div class="col-md-3">
+              <label class="form-label">雰囲気（1〜5）</label>
+              <select name="rating_atmosphere" class="form-select">
+                {% for i in "12345" %}
+                  <option value="{{ i }}" {% if my_review and my_review.rating_atmosphere|stringformat:"s" == i %}selected{% endif %}>{{ i }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">味（1〜5）</label>
+              <select name="rating_taste" class="form-select">
+                {% for i in "12345" %}
+                  <option value="{{ i }}" {% if my_review and my_review.rating_taste|stringformat:"s" == i %}selected{% endif %}>{{ i }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">値段（1〜5）</label>
+              <select name="rating_price" class="form-select">
+                {% for i in "12345" %}
+                  <option value="{{ i }}" {% if my_review and my_review.rating_price|stringformat:"s" == i %}selected{% endif %}>{{ i }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">接客（1〜5）</label>
+              <select name="rating_service" class="form-select">
+                {% for i in "12345" %}
+                  <option value="{{ i }}" {% if my_review and my_review.rating_service|stringformat:"s" == i %}selected{% endif %}>{{ i }}</option>
+                {% endfor %}
+              </select>
+            </div>
           </div>
 
           <div class="mb-3">
@@ -162,7 +186,8 @@
         <div class="col-12">
           <div class="card border-0 shadow-sm">
             <div class="card-body">
-              <div class="fw-semibold mb-2">評価: <span class="text-warning">★</span>{{ rv.rating }}</div>
+              <div class="fw-semibold mb-1">総合評価: <span class="text-warning">★</span>{{ rv.rating }}</div>
+              <div class="small text-secondary mb-2">雰囲気 {{ rv.rating_atmosphere }} / 味 {{ rv.rating_taste }} / 値段 {{ rv.rating_price }} / 接客 {{ rv.rating_service }}</div>
               <div class="mb-2">{{ rv.comment|linebreaksbr }}</div>
               <small class="text-secondary">投稿日: {{ rv.created_at }}</small>
             </div>

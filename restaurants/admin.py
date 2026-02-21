@@ -133,8 +133,18 @@ class RestaurantAdmin(admin.ModelAdmin):
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
-    list_display = ["restaurant", "user", "rating", "is_public", "created_at"]
-    list_filter = ["rating", "is_public", "created_at"]
+    list_display = [
+        "restaurant",
+        "user",
+        "rating",
+        "rating_atmosphere",
+        "rating_taste",
+        "rating_price",
+        "rating_service",
+        "is_public",
+        "created_at",
+    ]
+    list_filter = ["rating", "rating_atmosphere", "rating_taste", "rating_price", "rating_service", "is_public", "created_at"]
     search_fields = ["restaurant__name", "user__username", "user__email"]
     actions = ["make_public", "make_non_public"]
 

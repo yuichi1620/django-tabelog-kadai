@@ -26,7 +26,8 @@
             <tr>
               <th>ID</th>
               <th>ユーザー</th>
-              <th>評価</th>
+              <th>総合評価</th>
+              <th>評価内訳</th>
               <th>コメント</th>
               <th>公開状態</th>
               <th>投稿日</th>
@@ -39,6 +40,7 @@
               <td>{{ rv.id }}</td>
               <td>{{ rv.user.email|default:rv.user.username }}</td>
               <td>★{{ rv.rating }}</td>
+              <td class="small text-secondary">雰囲気 {{ rv.rating_atmosphere }} / 味 {{ rv.rating_taste }} / 値段 {{ rv.rating_price }} / 接客 {{ rv.rating_service }}</td>
               <td>{{ rv.comment|default:"-" }}</td>
               <td>
                 {% if rv.is_public %}
