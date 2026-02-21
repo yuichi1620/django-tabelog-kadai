@@ -47,7 +47,7 @@
                 <div class="d-flex align-items-stretch gap-2 border rounded p-2 bg-white">
                   <span class="badge text-bg-warning text-dark rounded-pill" style="min-width: 2.3rem;">{{ forloop.counter }}位</span>
                   {% if r.image %}
-                  <img src="{{ r.image_display_url }}" alt="{{ r.name }}" class="rounded" style="width: 108px; height: 88px; object-fit: cover; flex-shrink: 0;">
+                  <img src="{{ r.image_display_url }}" alt="{{ r.name }}" class="rounded" loading="lazy" decoding="async" style="width: 108px; height: 88px; object-fit: cover; flex-shrink: 0;">
                   {% else %}
                   <div class="rounded d-flex align-items-center justify-content-center bg-light text-secondary" style="width: 108px; height: 88px; flex-shrink: 0;">No</div>
                   {% endif %}
@@ -83,7 +83,7 @@
                 <a href="{% url 'restaurants:detail' r.id %}" class="text-decoration-none text-dark">
                   <div class="border rounded overflow-hidden bg-white h-100">
                     {% if r.image %}
-                    <img src="{{ r.image_display_url }}" alt="{{ r.name }}" style="height: 92px; width: 100%; object-fit: cover;">
+                    <img src="{{ r.image_display_url }}" alt="{{ r.name }}" loading="lazy" decoding="async" style="height: 92px; width: 100%; object-fit: cover;">
                     {% else %}
                     <div class="d-flex align-items-center justify-content-center bg-light text-secondary" style="height: 92px;">No Image</div>
                     {% endif %}
@@ -115,7 +115,7 @@
       {% for c in coupon_restaurants %}
         <a href="{% url 'restaurants:detail' c.id %}" class="card border-0 shadow-sm text-decoration-none text-dark" style="min-width: 240px; max-width: 240px;">
           {% if c.image %}
-            <img src="{{ c.image_display_url }}" class="card-img-top" alt="{{ c.name }}" style="height: 140px; object-fit: cover;">
+            <img src="{{ c.image_display_url }}" class="card-img-top" alt="{{ c.name }}" loading="lazy" decoding="async" style="height: 140px; object-fit: cover;">
           {% else %}
             <div class="card-img-top d-flex align-items-center justify-content-center bg-light text-secondary" style="height: 140px;">No Image</div>
           {% endif %}
@@ -195,7 +195,7 @@
         <div class="col-12 col-md-6">
           <div class="card h-100 border-0 shadow-sm">
             {% if r.image %}
-              <img src="{{ r.image_display_url }}" class="card-img-top" alt="{{ r.name }}" style="height: 200px; object-fit: cover;">
+              <img src="{{ r.image_display_url }}" class="card-img-top" alt="{{ r.name }}" loading="lazy" decoding="async" style="height: 200px; object-fit: cover;">
             {% else %}
               <div class="card-img-top d-flex align-items-center justify-content-center bg-light text-secondary" style="height: 200px;">No Image</div>
             {% endif %}

@@ -14,7 +14,7 @@
         <div class="col-12 col-md-6">
           <div class="card h-100 border-0 shadow-sm">
             {% if r.image %}
-              <img src="{{ r.image_display_url }}" class="card-img-top" alt="{{ r.name }}" style="height: 200px; object-fit: cover;">
+              <img src="{{ r.image_display_url }}" class="card-img-top" alt="{{ r.name }}" loading="lazy" decoding="async" style="height: 200px; object-fit: cover;">
             {% else %}
               <div class="card-img-top d-flex align-items-center justify-content-center bg-light text-secondary" style="height: 200px;">No Image</div>
             {% endif %}

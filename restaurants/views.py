@@ -11,8 +11,9 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.core import signing
 from django.core.paginator import Paginator
+from django.core.cache import cache
 from django.db import transaction
-from django.db.models import Avg, Count, F, Q
+from django.db.models import Avg, Case, Count, F, IntegerField, Q, When
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -43,6 +44,15 @@ MONTHLY_FEE = 300
 EMAIL_CHANGE_TOKEN_MAX_AGE = getattr(settings, "EMAIL_CHANGE_TOKEN_MAX_AGE", 60 * 60 * 24)
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
+
+
+def _ordered_by_pk_ids(ids):
+    if not ids:
+        return None
+    return Case(
+        *[When(pk=pk, then=pos) for pos, pk in enumerate(ids)],
+        output_field=IntegerField(),
+    )
 
 
 def paid_member_required(view_func):
@@ -283,33 +293,82 @@ def restaurant_list(request):
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
-    categories = Category.objects.all().order_by("name")
+    categories = cache.get("list_categories_v1")
+    if categories is None:
+        categories = list(Category.objects.all().order_by("name"))
+        cache.set("list_categories_v1", categories, 60 * 30)
+
+    coupon_ids = cache.get("list_coupon_restaurant_ids_v1")
+    if coupon_ids is None:
+        coupon_ids = list(
+            Restaurant.objects.filter(coupons__is_active=True)
+            .annotate(
+                active_coupon_count=Count("coupons", filter=Q(coupons__is_active=True), distinct=True),
+                avg_rating=Avg("reviews__rating", filter=Q(reviews__is_public=True)),
+            )
+            .order_by("-active_coupon_count", F("avg_rating").desc(nulls_last=True), "-created_at")
+            .distinct()
+            .values_list("id", flat=True)[:8]
+        )
+        cache.set("list_coupon_restaurant_ids_v1", coupon_ids, 60)
+    coupon_order = _ordered_by_pk_ids(coupon_ids)
     coupon_restaurants = (
-        Restaurant.objects.select_related("category")
-        .filter(coupons__is_active=True)
+        Restaurant.objects.none()
+        if not coupon_ids
+        else Restaurant.objects.select_related("category")
+        .filter(pk__in=coupon_ids)
         .annotate(
             active_coupon_count=Count("coupons", filter=Q(coupons__is_active=True), distinct=True),
             avg_rating=Avg("reviews__rating", filter=Q(reviews__is_public=True)),
+            _order=coupon_order,
         )
-        .order_by("-active_coupon_count", F("avg_rating").desc(nulls_last=True), "-created_at")
-        .distinct()[:8]
+        .order_by("_order")
     )
+
+    top_ids = cache.get("list_top_rated_restaurant_ids_v1")
+    if top_ids is None:
+        top_ids = list(
+            Restaurant.objects.annotate(
+                avg_rating=Avg("reviews__rating", filter=Q(reviews__is_public=True)),
+                review_count=Count("reviews", filter=Q(reviews__is_public=True), distinct=True),
+            )
+            .filter(review_count__gt=0)
+            .order_by(F("avg_rating").desc(nulls_last=True), "-review_count", "-created_at")
+            .values_list("id", flat=True)[:5]
+        )
+        cache.set("list_top_rated_restaurant_ids_v1", top_ids, 60)
+    top_order = _ordered_by_pk_ids(top_ids)
     top_rated_restaurants = (
-        Restaurant.objects.select_related("category")
+        Restaurant.objects.none()
+        if not top_ids
+        else Restaurant.objects.select_related("category")
+        .filter(pk__in=top_ids)
         .annotate(
             avg_rating=Avg("reviews__rating", filter=Q(reviews__is_public=True)),
             review_count=Count("reviews", filter=Q(reviews__is_public=True), distinct=True),
+            _order=top_order,
         )
-        .filter(review_count__gt=0)
-        .order_by(F("avg_rating").desc(nulls_last=True), "-review_count", "-created_at")[:5]
+        .order_by("_order")
     )
+
+    new_ids = cache.get("list_new_arrival_restaurant_ids_v1")
+    if new_ids is None:
+        new_ids = list(
+            Restaurant.objects.order_by("-created_at").values_list("id", flat=True)[:8]
+        )
+        cache.set("list_new_arrival_restaurant_ids_v1", new_ids, 60)
+    new_order = _ordered_by_pk_ids(new_ids)
     new_arrival_restaurants = (
-        Restaurant.objects.select_related("category")
+        Restaurant.objects.none()
+        if not new_ids
+        else Restaurant.objects.select_related("category")
+        .filter(pk__in=new_ids)
         .annotate(
             avg_rating=Avg("reviews__rating", filter=Q(reviews__is_public=True)),
             review_count=Count("reviews", filter=Q(reviews__is_public=True), distinct=True),
+            _order=new_order,
         )
-        .order_by("-created_at")[:8]
+        .order_by("_order")
     )
 
     context = {
