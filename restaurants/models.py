@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+from django.templatetags.static import static
 import uuid
 
 
@@ -97,7 +98,11 @@ class Restaurant(models.Model):
     def image_display_url(self):
         if not self.image:
             return ""
-        return self.image.url
+        try:
+            return self.image.url
+        except Exception:
+            # media配信できない環境では、同名パスをstatic側に配置してフォールバックする。
+            return static(self.image.name)
 
 
 class Reservation(models.Model):
