@@ -50,5 +50,8 @@ urlpatterns = [
     path("admin/restaurants/", views.admin_restaurant_list, name="admin_restaurant_list"),
     path("admin/restaurants/<int:pk>/", views.admin_restaurant_detail, name="admin_restaurant_detail"),
     path("admin/reviews/<int:pk>/delete/", views.admin_review_delete, name="admin_review_delete"),
+    path("admin/reviews/", views.admin_review_list, name="admin_review_list"),
+    path("admin/reviews/<int:pk>/visibility/", views.admin_review_visibility_toggle, name="admin_review_visibility_toggle"),
     path("admin/categories/", views.admin_category_list, name="admin_category_list"),
+    path("admin/sales/", views.admin_sales_list, name="admin_sales_list"),
 ]

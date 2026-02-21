@@ -74,6 +74,28 @@ class RestaurantListViewTests(TestCase):
         restaurants = list(response.context["restaurants"])
         self.assertEqual(restaurants[0].pk, self.restaurant_new.pk)
 
+    def test_list_sort_price_low_orders_by_budget_min_asc(self):
+        response = self.client.get(reverse("restaurants:list"), {"sort": "price_low"})
+        self.assertEqual(response.status_code, 200)
+        restaurants = list(response.context["restaurants"])
+        self.assertEqual(restaurants[0].pk, self.restaurant_no_review.pk)
+
+    def test_list_sort_price_high_orders_by_budget_max_desc(self):
+        response = self.client.get(reverse("restaurants:list"), {"sort": "price_high"})
+        self.assertEqual(response.status_code, 200)
+        restaurants = list(response.context["restaurants"])
+        self.assertEqual(restaurants[0].pk, self.restaurant_new.pk)
+
+    def test_non_public_review_is_hidden_from_public_list(self):
+        review = Review.objects.get(restaurant=self.restaurant_old)
+        review.is_public = False
+        review.save(update_fields=["is_public"])
+
+        response = self.client.get(reverse("restaurants:list"), {"sort": "rating"})
+        self.assertEqual(response.status_code, 200)
+        restaurants = list(response.context["restaurants"])
+        self.assertEqual(restaurants[0].pk, self.restaurant_new.pk)
+
 
 class PaidRestrictionTests(TestCase):
     def setUp(self):

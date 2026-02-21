@@ -148,6 +148,7 @@ class Review(models.Model):
 
     rating = models.PositiveSmallIntegerField("評価(1-5)")
     comment = models.TextField("レビュー本文", blank=True)
+    is_public = models.BooleanField("公開状態", default=True)
     created_at = models.DateTimeField("投稿日", auto_now_add=True)
 
     class Meta:

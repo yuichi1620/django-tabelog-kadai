@@ -1,0 +1,14 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<h1>{{ title }}</h1>
+
+<p>ヘッダー付きCSVをアップロードしてください。対応列: <code>name,category,address,phone_number,business_hours,description,budget_min,budget_max</code></p>
+
+<form method="post" enctype="multipart/form-data" class="mt-3">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit" class="button default">CSV取込を実行</button>
+  <a href="../" class="button">一覧へ戻る</a>
+</form>
+{% endblock %}

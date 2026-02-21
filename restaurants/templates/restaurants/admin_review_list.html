@@ -1,0 +1,84 @@
+{% extends "restaurants/base.html" %}
+{% block title %}レビュー管理 | NAGOYAMESHI{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="h4 mb-0">レビュー管理</h2>
+  <a class="btn btn-outline-dark btn-sm" href="{% url 'restaurants:admin_dashboard' %}">管理ダッシュボードへ</a>
+</div>
+
+<form method="get" class="card border-0 shadow-sm mb-3">
+  <div class="card-body row g-2 align-items-end">
+    <div class="col-md-4">
+      <label class="form-label">店舗名</label>
+      <input class="form-control" type="text" name="q_restaurant" value="{{ q_restaurant }}">
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">ユーザー（メール/ユーザー名）</label>
+      <input class="form-control" type="text" name="q_user" value="{{ q_user }}">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">公開状態</label>
+      <select class="form-select" name="visibility">
+        <option value="">すべて</option>
+        <option value="public" {% if visibility == "public" %}selected{% endif %}>公開</option>
+        <option value="private" {% if visibility == "private" %}selected{% endif %}>非公開</option>
+      </select>
+    </div>
+    <div class="col-md-2 d-grid">
+      <button class="btn btn-dark" type="submit">検索</button>
+    </div>
+  </div>
+</form>
+
+<div class="card border-0 shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>ID</th>
+          <th>店舗</th>
+          <th>ユーザー</th>
+          <th>評価</th>
+          <th>コメント</th>
+          <th>公開状態</th>
+          <th>投稿日</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for rv in reviews %}
+        <tr>
+          <td>{{ rv.id }}</td>
+          <td>{{ rv.restaurant.name }}</td>
+          <td>{{ rv.user.email|default:rv.user.username }}</td>
+          <td>★{{ rv.rating }}</td>
+          <td>{{ rv.comment|default:"-" }}</td>
+          <td>
+            {% if rv.is_public %}
+            <span class="badge text-bg-success">公開</span>
+            {% else %}
+            <span class="badge text-bg-secondary">非公開</span>
+            {% endif %}
+          </td>
+          <td>{{ rv.created_at }}</td>
+          <td class="d-flex gap-1">
+            <form method="post" action="{% url 'restaurants:admin_review_visibility_toggle' rv.id %}">
+              {% csrf_token %}
+              <button class="btn btn-outline-dark btn-sm" type="submit">
+                {% if rv.is_public %}非公開化{% else %}公開化{% endif %}
+              </button>
+            </form>
+            <form method="post" action="{% url 'restaurants:admin_review_delete' rv.id %}" onsubmit="return confirm('このレビューを削除しますか？');">
+              {% csrf_token %}
+              <button class="btn btn-outline-danger btn-sm" type="submit">削除</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" class="text-center text-secondary py-4">レビューがありません。</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -23,8 +23,12 @@
     <div class="d-flex flex-wrap gap-2">
       <a class="btn btn-outline-dark btn-sm" href="{% url 'restaurants:admin_member_list' %}">会員一覧・検索</a>
       <a class="btn btn-outline-dark btn-sm" href="{% url 'restaurants:admin_restaurant_list' %}">店舗一覧・レビュー管理</a>
+      <a class="btn btn-outline-dark btn-sm" href="{% url 'restaurants:admin_review_list' %}">レビュー一覧・検索</a>
       <a class="btn btn-outline-dark btn-sm" href="{% url 'restaurants:admin_category_list' %}">カテゴリ一覧</a>
+      <a class="btn btn-outline-dark btn-sm" href="{% url 'restaurants:admin_sales_list' %}">売上一覧・合計</a>
       <a class="btn btn-outline-dark btn-sm" href="/admin/restaurants/restaurant/">店舗CRUD</a>
+      <a class="btn btn-outline-dark btn-sm" href="/admin/restaurants/restaurant/import-csv/">店舗CSV入力</a>
+      <a class="btn btn-outline-dark btn-sm" href="/admin/restaurants/review/">レビュー管理（Django管理）</a>
       <a class="btn btn-outline-dark btn-sm" href="/admin/restaurants/category/">カテゴリCRUD</a>
     </div>
   </div>

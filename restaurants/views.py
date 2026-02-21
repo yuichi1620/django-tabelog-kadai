@@ -261,8 +261,8 @@ def restaurant_list(request):
         restaurants = restaurants.filter(budget_max__lte=b)
 
     restaurants = restaurants.annotate(
-        avg_rating=Avg("reviews__rating"),
-        review_count=Count("reviews", distinct=True),
+        avg_rating=Avg("reviews__rating", filter=Q(reviews__is_public=True)),
+        review_count=Count("reviews", filter=Q(reviews__is_public=True), distinct=True),
         favorite_count=Count("favorite", distinct=True),
     )
 
@@ -272,6 +272,10 @@ def restaurant_list(request):
         restaurants = restaurants.order_by(F("avg_rating").desc(nulls_last=True), "-created_at")
     elif sort == "popular":
         restaurants = restaurants.order_by("-favorite_count", F("avg_rating").desc(nulls_last=True), "-created_at")
+    elif sort == "price_low":
+        restaurants = restaurants.order_by("budget_min", "budget_max", "-created_at")
+    elif sort == "price_high":
+        restaurants = restaurants.order_by("-budget_max", "-budget_min", "-created_at")
     else:
         restaurants = restaurants.order_by("-created_at")
 
@@ -285,7 +289,7 @@ def restaurant_list(request):
         .filter(coupons__is_active=True)
         .annotate(
             active_coupon_count=Count("coupons", filter=Q(coupons__is_active=True), distinct=True),
-            avg_rating=Avg("reviews__rating"),
+            avg_rating=Avg("reviews__rating", filter=Q(reviews__is_public=True)),
         )
         .order_by("-active_coupon_count", F("avg_rating").desc(nulls_last=True), "-created_at")
         .distinct()[:8]
@@ -293,8 +297,8 @@ def restaurant_list(request):
     top_rated_restaurants = (
         Restaurant.objects.select_related("category")
         .annotate(
-            avg_rating=Avg("reviews__rating"),
-            review_count=Count("reviews", distinct=True),
+            avg_rating=Avg("reviews__rating", filter=Q(reviews__is_public=True)),
+            review_count=Count("reviews", filter=Q(reviews__is_public=True), distinct=True),
         )
         .filter(review_count__gt=0)
         .order_by(F("avg_rating").desc(nulls_last=True), "-review_count", "-created_at")[:5]
@@ -302,8 +306,8 @@ def restaurant_list(request):
     new_arrival_restaurants = (
         Restaurant.objects.select_related("category")
         .annotate(
-            avg_rating=Avg("reviews__rating"),
-            review_count=Count("reviews", distinct=True),
+            avg_rating=Avg("reviews__rating", filter=Q(reviews__is_public=True)),
+            review_count=Count("reviews", filter=Q(reviews__is_public=True), distinct=True),
         )
         .order_by("-created_at")[:8]
     )
@@ -332,7 +336,7 @@ def restaurant_detail(request, pk):
         pk=pk,
     )
 
-    reviews = restaurant.reviews.all().order_by("-created_at")
+    reviews = restaurant.reviews.filter(is_public=True).order_by("-created_at")
     avg_rating = reviews.aggregate(avg=Avg("rating"))["avg"]
 
     is_favorite = False
@@ -901,9 +905,80 @@ def admin_review_delete(request, pk):
 
 
 @staff_member_required
+def admin_review_list(request):
+    q_restaurant = request.GET.get("q_restaurant", "").strip()
+    q_user = request.GET.get("q_user", "").strip()
+    visibility = request.GET.get("visibility", "").strip()
+
+    reviews = Review.objects.select_related("restaurant", "user").order_by("-created_at")
+    if q_restaurant:
+        reviews = reviews.filter(restaurant__name__icontains=q_restaurant)
+    if q_user:
+        reviews = reviews.filter(Q(user__email__icontains=q_user) | Q(user__username__icontains=q_user))
+    if visibility == "public":
+        reviews = reviews.filter(is_public=True)
+    elif visibility == "private":
+        reviews = reviews.filter(is_public=False)
+
+    context = {
+        "reviews": reviews[:300],
+        "q_restaurant": q_restaurant,
+        "q_user": q_user,
+        "visibility": visibility,
+    }
+    return render(request, "restaurants/admin_review_list.html", context)
+
+
+@staff_member_required
+@require_POST
+def admin_review_visibility_toggle(request, pk):
+    review = get_object_or_404(Review, pk=pk)
+    review.is_public = not review.is_public
+    review.save(update_fields=["is_public"])
+    messages.success(
+        request,
+        "レビューを公開にしました。" if review.is_public else "レビューを非公開にしました。",
+    )
+    return redirect("restaurants:admin_review_list")
+
+
+@staff_member_required
 def admin_category_list(request):
     q = request.GET.get("q", "").strip()
     categories = Category.objects.all().order_by("name")
     if q:
         categories = categories.filter(name__icontains=q)
     return render(request, "restaurants/admin_category_list.html", {"categories": categories, "q": q})
+
+
+@staff_member_required
+def admin_sales_list(request):
+    today = timezone.localdate()
+    default_start = today.replace(day=1)
+    date_from = request.GET.get("date_from", default_start.isoformat()).strip()
+    date_to = request.GET.get("date_to", today.isoformat()).strip()
+
+    members = Member.objects.filter(plan_status=Member.PLAN_PAID, paid_started_at__isnull=False).select_related("user")
+    if date_from:
+        members = members.filter(paid_started_at__date__gte=date_from)
+    if date_to:
+        members = members.filter(paid_started_at__date__lte=date_to)
+
+    sales_rows = [
+        {
+            "paid_at": member.paid_started_at,
+            "member_name": member.full_name or member.user.first_name or member.user.email,
+            "email": member.user.email,
+            "amount": MONTHLY_FEE,
+        }
+        for member in members.order_by("-paid_started_at")
+    ]
+    total_amount = MONTHLY_FEE * len(sales_rows)
+
+    context = {
+        "sales_rows": sales_rows,
+        "date_from": date_from,
+        "date_to": date_to,
+        "total_amount": total_amount,
+    }
+    return render(request, "restaurants/admin_sales_list.html", context)
