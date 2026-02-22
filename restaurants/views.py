@@ -1,5 +1,6 @@
 from datetime import datetime
 import json
+import logging
 
 from django.conf import settings
 from django.contrib import messages
@@ -20,7 +21,7 @@ from django.templatetags.static import static
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode, url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 import stripe
@@ -51,6 +52,7 @@ REVIEW_SCORE_FIELDS = (
 )
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
+logger = logging.getLogger(__name__)
 
 
 def _ordered_by_pk_ids(ids):
@@ -259,7 +261,11 @@ def toggle_favorite(request, pk):
         favorite.delete()
 
     next_url = request.POST.get("next")
-    if next_url:
+    if next_url and url_has_allowed_host_and_scheme(
+        url=next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
         return redirect(next_url)
 
     return redirect("restaurants:detail", pk=pk)
@@ -665,23 +671,29 @@ def create_checkout_session(request):
 
     member, _ = Member.objects.get_or_create(user=request.user, defaults={"full_name": request.user.first_name})
 
-    if not member.stripe_customer_id:
-        customer = stripe.Customer.create(
-            email=request.user.email,
-            name=member.full_name or request.user.first_name or request.user.email,
+    try:
+        if not member.stripe_customer_id:
+            customer = stripe.Customer.create(
+                email=request.user.email,
+                name=member.full_name or request.user.first_name or request.user.email,
+                metadata={"user_id": str(request.user.id)},
+            )
+            member.stripe_customer_id = customer.id
+            member.save(update_fields=["stripe_customer_id"])
+
+        session = stripe.checkout.Session.create(
+            mode="subscription",
+            customer=member.stripe_customer_id,
+            line_items=[{"price": settings.STRIPE_PRICE_ID, "quantity": 1}],
+            success_url=f"{settings.APP_BASE_URL}{reverse('restaurants:billing_success')}?session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{settings.APP_BASE_URL}{reverse('restaurants:upgrade_membership')}",
             metadata={"user_id": str(request.user.id)},
         )
-        member.stripe_customer_id = customer.id
-        member.save(update_fields=["stripe_customer_id"])
+    except Exception:
+        logger.exception("Failed to create Stripe checkout session: user_id=%s", request.user.id)
+        messages.error(request, "決済画面の作成に失敗しました。時間をおいて再度お試しください。")
+        return redirect("restaurants:upgrade_membership")
 
-    session = stripe.checkout.Session.create(
-        mode="subscription",
-        customer=member.stripe_customer_id,
-        line_items=[{"price": settings.STRIPE_PRICE_ID, "quantity": 1}],
-        success_url=f"{settings.APP_BASE_URL}{reverse('restaurants:billing_success')}?session_id={{CHECKOUT_SESSION_ID}}",
-        cancel_url=f"{settings.APP_BASE_URL}{reverse('restaurants:upgrade_membership')}",
-        metadata={"user_id": str(request.user.id)},
-    )
     return redirect(session.url, permanent=False)
 
 
@@ -692,10 +704,26 @@ def billing_success(request):
         try:
             session = stripe.checkout.Session.retrieve(session_id)
             if session and session.get("payment_status") in ("paid", "no_payment_required"):
+                metadata = session.get("metadata") or {}
+                session_user_id = str(metadata.get("user_id") or "")
+                session_customer_id = session.get("customer")
+
+                if session_user_id and session_user_id != str(request.user.id):
+                    messages.error(request, "この決済結果は現在のログインユーザーでは確認できません。")
+                    return redirect("restaurants:upgrade_membership")
+
                 member, _ = Member.objects.get_or_create(
                     user=request.user,
                     defaults={"full_name": request.user.first_name},
                 )
+                if (
+                    member.stripe_customer_id
+                    and session_customer_id
+                    and member.stripe_customer_id != session_customer_id
+                ):
+                    messages.error(request, "決済情報の整合性確認に失敗しました。運営者に連絡してください。")
+                    return redirect("restaurants:upgrade_membership")
+
                 member.stripe_customer_id = session.get("customer") or member.stripe_customer_id
                 member.stripe_subscription_id = session.get("subscription") or member.stripe_subscription_id
                 member.plan_status = Member.PLAN_PAID
@@ -714,7 +742,7 @@ def billing_success(request):
                 )
         except Exception:
             # Webhookが正常に到達していればこのフォールバックが失敗しても問題ない。
-            pass
+            logger.exception("Failed to process billing_success fallback: user_id=%s", request.user.id)
 
     messages.success(request, "決済が完了しました。反映に数秒かかる場合があります。")
     return render(request, "restaurants/billing_success.html")
@@ -724,19 +752,25 @@ def billing_success(request):
 @require_POST
 def create_billing_portal_session(request):
     member, _ = Member.objects.get_or_create(user=request.user)
-    if not member.stripe_customer_id:
-        customer = stripe.Customer.create(
-            email=request.user.email,
-            name=member.full_name or request.user.first_name or request.user.email,
-            metadata={"user_id": str(request.user.id)},
-        )
-        member.stripe_customer_id = customer.id
-        member.save(update_fields=["stripe_customer_id"])
+    try:
+        if not member.stripe_customer_id:
+            customer = stripe.Customer.create(
+                email=request.user.email,
+                name=member.full_name or request.user.first_name or request.user.email,
+                metadata={"user_id": str(request.user.id)},
+            )
+            member.stripe_customer_id = customer.id
+            member.save(update_fields=["stripe_customer_id"])
 
-    session = stripe.billing_portal.Session.create(
-        customer=member.stripe_customer_id,
-        return_url=f"{settings.APP_BASE_URL}{reverse('restaurants:mypage')}",
-    )
+        session = stripe.billing_portal.Session.create(
+            customer=member.stripe_customer_id,
+            return_url=f"{settings.APP_BASE_URL}{reverse('restaurants:mypage')}",
+        )
+    except Exception:
+        logger.exception("Failed to create Stripe billing portal session: user_id=%s", request.user.id)
+        messages.error(request, "カード情報管理ページの作成に失敗しました。時間をおいて再度お試しください。")
+        return redirect("restaurants:upgrade_membership")
+
     return redirect(session.url, permanent=False)
 
 
@@ -745,11 +779,15 @@ def create_billing_portal_session(request):
 def cancel_membership(request):
     member, _ = Member.objects.get_or_create(user=request.user)
     if member.stripe_subscription_id:
-        stripe.Subscription.modify(
-            member.stripe_subscription_id,
-            cancel_at_period_end=True,
-        )
-        messages.success(request, "サブスク解約を受け付けました。現在の契約期間終了後に解約されます。")
+        try:
+            stripe.Subscription.modify(
+                member.stripe_subscription_id,
+                cancel_at_period_end=True,
+            )
+            messages.success(request, "サブスク解約を受け付けました。現在の契約期間終了後に解約されます。")
+        except Exception:
+            logger.exception("Failed to cancel Stripe subscription: user_id=%s", request.user.id)
+            messages.error(request, "解約処理に失敗しました。時間をおいて再度お試しください。")
     else:
         member.plan_status = Member.PLAN_FREE
         member.paid_ended_at = timezone.now()
@@ -778,7 +816,7 @@ def stripe_webhook(request):
     sig_header = request.META.get("HTTP_STRIPE_SIGNATURE", "")
     endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
 
-    if endpoint_secret and (sig_header or not settings.DEBUG):
+    if endpoint_secret:
         try:
             event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
         except ValueError:
@@ -786,6 +824,8 @@ def stripe_webhook(request):
         except stripe.error.SignatureVerificationError:
             return HttpResponse(status=400)
     else:
+        if not settings.DEBUG:
+            return HttpResponse(status=400)
         try:
             event = json.loads(payload.decode("utf-8"))
         except Exception:
