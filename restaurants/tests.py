@@ -309,6 +309,46 @@ class SignUpFlowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "メール認証が完了していません")
 
+    @override_settings(AUTO_ACTIVATE_ON_EMAIL_FAILURE=True)
+    @patch("restaurants.views.send_mail", side_effect=Exception("smtp down"))
+    def test_signup_auto_activates_when_mail_fails(self, _mock_send_mail):
+        response = self.client.post(
+            reverse("restaurants:signup"),
+            {
+                "full_name": "障害時ユーザー",
+                "email": "mailfail_signup@example.com",
+                "password1": "ComplexPass123",
+                "password2": "ComplexPass123",
+                "accept_terms": "on",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        user = get_user_model().objects.get(email="mailfail_signup@example.com")
+        self.assertTrue(user.is_active)
+        self.assertContains(response, "現在メール送信に障害があるため、登録を有効化しました。")
+
+    @override_settings(AUTO_ACTIVATE_ON_EMAIL_FAILURE=True)
+    @patch("restaurants.views.send_mail", side_effect=Exception("smtp down"))
+    def test_resend_auto_activates_when_mail_fails(self, _mock_send_mail):
+        user = get_user_model().objects.create_user(
+            username="mailfail_resend@example.com",
+            email="mailfail_resend@example.com",
+            password="pass12345",
+            is_active=False,
+        )
+        Member.objects.create(user=user, full_name="Mail Fail")
+
+        response = self.client.post(
+            reverse("restaurants:resend_verification_email"),
+            {"email": "mailfail_resend@example.com"},
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        user.refresh_from_db()
+        self.assertTrue(user.is_active)
+        self.assertContains(response, "現在メール送信に障害があるため、アカウントを有効化しました。")
+
 
 class EmailChangeVerificationTests(TestCase):
     def setUp(self):

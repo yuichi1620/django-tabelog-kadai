@@ -117,6 +117,13 @@ def _send_signup_verification_email(request, user):
     return True
 
 
+def _activate_user_without_email_verification(user):
+    if user.is_active:
+        return
+    user.is_active = True
+    user.save(update_fields=["is_active"])
+
+
 # ===== 認証 =====
 
 def signup(request):
@@ -133,6 +140,14 @@ def signup(request):
             )
 
             sent = _send_signup_verification_email(request, user)
+            if not sent and settings.AUTO_ACTIVATE_ON_EMAIL_FAILURE:
+                _activate_user_without_email_verification(user)
+                messages.warning(
+                    request,
+                    "現在メール送信に障害があるため、登録を有効化しました。ログインしてください。",
+                )
+                return redirect("login")
+
             context = {"email": user.email, "email_send_failed": not sent}
             return render(request, "registration/verification_sent.html", context)
     else:
@@ -152,6 +167,13 @@ def resend_verification_email(request):
             sent = True
             if user and not user.is_active:
                 sent = _send_signup_verification_email(request, user)
+                if not sent and settings.AUTO_ACTIVATE_ON_EMAIL_FAILURE:
+                    _activate_user_without_email_verification(user)
+                    messages.warning(
+                        request,
+                        "現在メール送信に障害があるため、アカウントを有効化しました。ログインできます。",
+                    )
+                    return redirect("login")
 
             if sent:
                 messages.success(request, "該当する未認証アカウントがある場合、認証メールを再送しました。")

@@ -160,6 +160,7 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "False").lower() == "true"
 EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "False").lower() == "true"
 EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "10"))
+AUTO_ACTIVATE_ON_EMAIL_FAILURE = os.getenv("AUTO_ACTIVATE_ON_EMAIL_FAILURE", "False").lower() == "true"
 LOGIN_REDIRECT_URL = "/mypage/"
 LOGOUT_REDIRECT_URL = "/"
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
