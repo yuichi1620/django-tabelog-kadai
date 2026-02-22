@@ -6,6 +6,7 @@ from django.contrib import admin, messages
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import path
+from django.utils.html import format_html
 
 from .models import (
     Category,
@@ -40,10 +41,25 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Restaurant)
 class RestaurantAdmin(admin.ModelAdmin):
-    list_display = ["name", "category", "phone_number", "business_hours", "budget_min", "budget_max", "image", "created_at"]
+    list_display = [
+        "name",
+        "category",
+        "phone_number",
+        "business_hours",
+        "budget_min",
+        "budget_max",
+        "image_link",
+        "created_at",
+    ]
     list_filter = ["category"]
     search_fields = ["name", "address", "phone_number", "business_hours"]
     actions = ["export_csv"]
+
+    @admin.display(description="店舗画像")
+    def image_link(self, obj):
+        if not obj.image:
+            return "-"
+        return format_html('<a href="{}" target="_blank" rel="noopener">画像を開く</a>', obj.image_display_url)
 
     def get_urls(self):
         urls = super().get_urls()

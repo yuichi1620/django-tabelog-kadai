@@ -37,5 +37,11 @@ urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),
 ]
 
+if not settings.DEBUG:
+    urlpatterns.insert(
+        0,
+        path("media/restaurants/<path:path>", restaurant_views.legacy_media_restaurant_image),
+    )
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

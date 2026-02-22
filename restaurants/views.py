@@ -16,6 +16,7 @@ from django.db import transaction
 from django.db.models import Avg, Case, Count, F, IntegerField, Q, When
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.templatetags.static import static
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.encoding import force_bytes, force_str
@@ -71,6 +72,10 @@ def paid_member_required(view_func):
         return view_func(request, *args, **kwargs)
 
     return _wrapped
+
+
+def legacy_media_restaurant_image(request, path):
+    return redirect(static(f"restaurants/{path}"), permanent=False)
 
 
 # ===== 認証 =====
