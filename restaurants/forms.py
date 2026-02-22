@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from .models import Member, Reservation, PaymentMethod
+from .models import Member, Reservation
 
 
 class SignUpForm(UserCreationForm):
@@ -108,14 +108,3 @@ class ReservationForm(forms.ModelForm):
             raise ValidationError("現在より後の日時を指定してください。")
         return reserved_at
 
-
-class PaymentMethodForm(forms.ModelForm):
-    class Meta:
-        model = PaymentMethod
-        fields = ["card_brand", "card_last4", "token"]
-
-    def clean_card_last4(self):
-        card_last4 = self.cleaned_data.get("card_last4", "").strip()
-        if card_last4 and not re.fullmatch(r"\d{4}", card_last4):
-            raise ValidationError("カード下4桁は4桁の数字で入力してください。")
-        return card_last4

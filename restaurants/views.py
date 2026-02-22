@@ -32,7 +32,6 @@ from .models import (
     Coupon,
     Favorite,
     Member,
-    PaymentMethod,
     Reservation,
     Restaurant,
     Review,
@@ -82,6 +81,19 @@ def legacy_media_restaurant_image(request, path):
 
 def legacy_media_category_image(request, path):
     return redirect(static(f"restaurants_by_category/{path}"), permanent=False)
+
+
+def _ensure_stripe_customer(member, user):
+    if member.stripe_customer_id:
+        return member.stripe_customer_id
+    customer = stripe.Customer.create(
+        email=user.email,
+        name=member.full_name or user.first_name or user.email,
+        metadata={"user_id": str(user.id)},
+    )
+    member.stripe_customer_id = customer.id
+    member.save(update_fields=["stripe_customer_id"])
+    return member.stripe_customer_id
 
 
 # ===== 認証 =====
@@ -672,18 +684,11 @@ def create_checkout_session(request):
     member, _ = Member.objects.get_or_create(user=request.user, defaults={"full_name": request.user.first_name})
 
     try:
-        if not member.stripe_customer_id:
-            customer = stripe.Customer.create(
-                email=request.user.email,
-                name=member.full_name or request.user.first_name or request.user.email,
-                metadata={"user_id": str(request.user.id)},
-            )
-            member.stripe_customer_id = customer.id
-            member.save(update_fields=["stripe_customer_id"])
+        customer_id = _ensure_stripe_customer(member, request.user)
 
         session = stripe.checkout.Session.create(
             mode="subscription",
-            customer=member.stripe_customer_id,
+            customer=customer_id,
             line_items=[{"price": settings.STRIPE_PRICE_ID, "quantity": 1}],
             success_url=f"{settings.APP_BASE_URL}{reverse('restaurants:billing_success')}?session_id={{CHECKOUT_SESSION_ID}}",
             cancel_url=f"{settings.APP_BASE_URL}{reverse('restaurants:upgrade_membership')}",
@@ -753,17 +758,10 @@ def billing_success(request):
 def create_billing_portal_session(request):
     member, _ = Member.objects.get_or_create(user=request.user)
     try:
-        if not member.stripe_customer_id:
-            customer = stripe.Customer.create(
-                email=request.user.email,
-                name=member.full_name or request.user.first_name or request.user.email,
-                metadata={"user_id": str(request.user.id)},
-            )
-            member.stripe_customer_id = customer.id
-            member.save(update_fields=["stripe_customer_id"])
+        customer_id = _ensure_stripe_customer(member, request.user)
 
         session = stripe.billing_portal.Session.create(
-            customer=member.stripe_customer_id,
+            customer=customer_id,
             return_url=f"{settings.APP_BASE_URL}{reverse('restaurants:mypage')}",
         )
     except Exception:
