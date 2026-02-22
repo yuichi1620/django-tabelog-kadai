@@ -26,7 +26,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 import stripe
 
-from .forms import AccountUpdateForm, MemberForm, ReservationForm, SignUpForm
+from .forms import AccountUpdateForm, MemberForm, ReservationForm, ResendVerificationEmailForm, SignUpForm
 from .models import (
     Category,
     Coupon,
@@ -96,6 +96,27 @@ def _ensure_stripe_customer(member, user):
     return member.stripe_customer_id
 
 
+def _send_signup_verification_email(request, user):
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    token = default_token_generator.make_token(user)
+    verify_url = request.build_absolute_uri(
+        reverse("restaurants:verify_email", kwargs={"uidb64": uid, "token": token})
+    )
+
+    try:
+        send_mail(
+            subject="【NAGOYAMESHI】メール認証のご案内",
+            message=f"以下のURLにアクセスして会員登録を完了してください。\n{verify_url}",
+            from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@example.com"),
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+    except Exception:
+        logger.exception("Failed to send signup verification email. user_id=%s", user.id)
+        return False
+    return True
+
+
 # ===== 認証 =====
 
 def signup(request):
@@ -111,25 +132,36 @@ def signup(request):
                 defaults={"full_name": form.cleaned_data["full_name"].strip()},
             )
 
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-            token = default_token_generator.make_token(user)
-            verify_url = request.build_absolute_uri(
-                reverse("restaurants:verify_email", kwargs={"uidb64": uid, "token": token})
-            )
-
-            send_mail(
-                subject="【NAGOYAMESHI】メール認証のご案内",
-                message=f"以下のURLにアクセスして会員登録を完了してください。\n{verify_url}",
-                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@example.com"),
-                recipient_list=[user.email],
-                fail_silently=False,
-            )
-
-            return render(request, "registration/verification_sent.html", {"email": user.email})
+            sent = _send_signup_verification_email(request, user)
+            context = {"email": user.email, "email_send_failed": not sent}
+            return render(request, "registration/verification_sent.html", context)
     else:
         form = SignUpForm()
 
     return render(request, "registration/signup.html", {"form": form})
+
+
+def resend_verification_email(request):
+    if request.method == "POST":
+        form = ResendVerificationEmailForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data["email"]
+            user_model = get_user_model()
+            user = user_model.objects.filter(email__iexact=email).order_by("-id").first()
+
+            sent = True
+            if user and not user.is_active:
+                sent = _send_signup_verification_email(request, user)
+
+            if sent:
+                messages.success(request, "該当する未認証アカウントがある場合、認証メールを再送しました。")
+            else:
+                messages.error(request, "認証メールの送信に失敗しました。時間をおいて再度お試しください。")
+            return redirect("restaurants:resend_verification_email")
+    else:
+        form = ResendVerificationEmailForm()
+
+    return render(request, "registration/resend_verification_email.html", {"form": form})
 
 
 def verify_email(request, uidb64, token):

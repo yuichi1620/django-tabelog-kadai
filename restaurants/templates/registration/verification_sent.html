@@ -4,11 +4,19 @@
 <div class="card border-0 shadow-sm">
   <div class="card-body">
     <h2 class="h4">認証メールを送信しました</h2>
+    {% if email_send_failed %}
+      <div class="alert alert-warning">
+        認証メールの送信に失敗しました。時間をおいて再送してください。
+      </div>
+    {% endif %}
     {% if email_change %}
       <p>{{ email }} 宛に認証メールを送信しました。メール内リンクからメールアドレス変更を完了してください。</p>
     {% else %}
       <p>{{ email }} 宛に認証メールを送信しました。メール内リンクから本登録を完了してください。</p>
     {% endif %}
+    <a class="btn btn-outline-dark btn-sm" href="{% url 'restaurants:resend_verification_email' %}">
+      認証メールを再送する
+    </a>
   </div>
 </div>
 {% endblock %}

@@ -273,6 +273,42 @@ class SignUpFlowTests(TestCase):
         self.assertTrue(get_user_model().objects.filter(email="new_user@example.com").exists())
         self.assertEqual(len(mail.outbox), 1)
 
+    def test_resend_verification_email_for_inactive_user(self):
+        user = get_user_model().objects.create_user(
+            username="inactive@example.com",
+            email="inactive@example.com",
+            password="pass12345",
+            is_active=False,
+        )
+        Member.objects.create(user=user, full_name="Inactive User")
+
+        response = self.client.post(
+            reverse("restaurants:resend_verification_email"),
+            {"email": "inactive@example.com"},
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "認証メールを再送しました")
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("/accounts/verify/", mail.outbox[0].body)
+
+    def test_inactive_user_login_shows_verification_message(self):
+        get_user_model().objects.create_user(
+            username="inactive_login@example.com",
+            email="inactive_login@example.com",
+            password="pass12345",
+            is_active=False,
+        )
+
+        response = self.client.post(
+            reverse("login"),
+            {"username": "inactive_login@example.com", "password": "pass12345"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "メール認証が完了していません")
+
 
 class EmailChangeVerificationTests(TestCase):
     def setUp(self):

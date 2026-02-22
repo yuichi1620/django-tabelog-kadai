@@ -8,7 +8,16 @@
         <div class="card-body p-4">
           <h2 class="h4 mb-3">ログイン</h2>
 
-          {% if form.errors %}
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+              {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+              {% endfor %}
+              <div class="mt-2">
+                <a href="{% url 'restaurants:resend_verification_email' %}">認証メールを再送する</a>
+              </div>
+            </div>
+          {% elif form.errors %}
             <div class="alert alert-danger">メールアドレスかパスワードが違います。</div>
           {% endif %}
 
@@ -26,6 +35,9 @@
           </form>
           <div class="mt-3 text-center">
             <a href="{% url 'password_reset' %}">パスワードをお忘れの方</a>
+          </div>
+          <div class="mt-2 text-center">
+            <a href="{% url 'restaurants:resend_verification_email' %}">認証メールを再送する</a>
           </div>
         </div>
       </div>
