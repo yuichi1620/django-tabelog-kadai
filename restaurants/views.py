@@ -78,6 +78,10 @@ def legacy_media_restaurant_image(request, path):
     return redirect(static(f"restaurants/{path}"), permanent=False)
 
 
+def legacy_media_category_image(request, path):
+    return redirect(static(f"restaurants_by_category/{path}"), permanent=False)
+
+
 # ===== 認証 =====
 
 def signup(request):

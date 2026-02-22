@@ -40,6 +40,10 @@ urlpatterns = [
 if not settings.DEBUG:
     urlpatterns.insert(
         0,
+        path("media/restaurants_by_category/<path:path>", restaurant_views.legacy_media_category_image),
+    )
+    urlpatterns.insert(
+        0,
         path("media/restaurants/<path:path>", restaurant_views.legacy_media_restaurant_image),
     )
 
