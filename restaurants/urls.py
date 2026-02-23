@@ -1,23 +1,22 @@
 from django.urls import include, path
 
-from . import views
+from app_management import views as management_views
 
 app_name = "restaurants"
 
 urlpatterns = [
     # Public
-    path("", include("restaurants.urls_public")),
+    path("", include("app_public.urls")),
     # Account
-    path("accounts/", include("restaurants.urls_account")),
+    path("accounts/", include("app_accounts.urls")),
     # Member
-    path("members/", include("restaurants.urls_member")),
-    path("mypage/", views.mypage, name="mypage"),
+    path("", include("app_members.urls")),
     # Membership
-    path("membership/", include("restaurants.urls_membership")),
+    path("membership/", include("app_membership.urls")),
     # Webhook
-    path("webhooks/", include("restaurants.urls_webhook")),
+    path("webhooks/", include("app_webhooks.urls")),
     # Management
-    path("management/", include("restaurants.urls_management")),
+    path("management/", include("app_management.urls")),
     # 旧URL互換
-    path("admin-dashboard/", views.admin_dashboard),
+    path("admin-dashboard/", management_views.admin_dashboard),
 ]

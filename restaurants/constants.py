@@ -1,0 +1,2 @@
+MONTHLY_FEE = 300
+

@@ -64,6 +64,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'app_accounts',
+    'app_public',
+    'app_members',
+    'app_membership',
+    'app_webhooks',
+    'app_management',
     'restaurants',
 ]
 
